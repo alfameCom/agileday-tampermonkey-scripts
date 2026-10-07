@@ -1,0 +1,5 @@
+.DS_Store
+*.zip
+*.options.json
+*.storage.json
+.generic-denylist
