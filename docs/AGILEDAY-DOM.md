@@ -24,8 +24,8 @@ before a larger change to the time card or My hours is always welcome, but not e
 | `data-testid` `total-YYYY-MM-DD` on summary row cells | sticky-totals, day-colors, accordion |
 | Summary cell structure: one wrapper element whose first two children are *Reported* and *Flex*, as `h:mm` or `-` | day-colors |
 | Day columns aligned by `cellIndex` across all rows of the time card table, header row included | day-colors |
-| `svg[data-testid="CommentAdded2Icon"]` for a filled comment, **with the comment text in its `aria-label`** | copy-comments, drag-clone |
-| Comment popover `.MuiPopover-paper` with a `textarea`, and the first `button` in it being *save* | drag-clone |
+| Comment button `button[aria-label="Edit description"]` in hour cells; its `svg` has an `aria-label` **with the comment text** when the cell has a comment, and none when it is empty | copy-comments, drag-clone |
+| Comment dialog: a `textarea` inside a `[role="presentation"]` modal root, saved with a button labelled *Update* (or *Save*) | drag-clone |
 | Button labels `Submit`, `Current month`, `Current year`; text `Agent`; chip text `UNSUBMITTED`; the word *freeze*/*frozen* in the freeze notice | sticky-totals, accordion, my-hours |
 | My hours MUI DataGrid: `role`, `aria-expanded`, `aria-level`, `data-id`, `data-field`; field names `__tree_data_group__`, `date`, `project`, `task`, `description`; a header title starting with *Actual* | my-hours, demo-mode |
 | My hours: DataGrid `apiRef` and the date range picker's `onChange`/`onAccept`, reached through React fiber props | my-hours |
@@ -63,14 +63,15 @@ the Submit bar.
 
 Right-click on a filled comment icon copies the comment to the clipboard.
 
-- Filled comment: `svg[data-testid="CommentAdded2Icon"]` in the clicked cell. **The
-  text is read from the icon's `aria-label`.** This is what makes it work in locked
+- Filled comment: `button[aria-label="Edit description"] svg[aria-label]` in the clicked
+  cell. **The text is read from the icon's `aria-label`**; an empty comment's icon has no
+  `aria-label`. This is what makes it work in locked
   previous-month cells too, where the popover cannot be opened.
 - Hit test by coordinates (icon rectangle + 6 px), because in locked cells a disabled
   overlay on top of the icon receives the event.
 - Capture-phase `contextmenu` listener; the default menu is suppressed only over a filled
   icon. Copies with `GM_setClipboard`.
-- Health check: among filled cells, at least one has `svg[data-testid*="Comment"]`.
+- Health check: among filled cells, at least one has a `button[aria-label="Edit description"] svg`.
 
 ### agileday-day-colors
 
@@ -95,19 +96,21 @@ Agileday's own UI.
 
 - Rows and inputs: `tr[data-testid="task-row"]`, `input[data-testid^="input-"]`.
   Locked cells: `input.disabled` / `input.readOnly`.
-- Comment source: `svg[data-testid="CommentAdded2Icon"]` `aria-label`.
+- Comment source: `button[aria-label="Edit description"] svg[aria-label]`, the `aria-label`.
 - Writing hours: `focus()`, the native `HTMLInputElement` `value` setter, bubbling
   `input` and `change` events, `blur()`. The value is copied verbatim.
 - Writing the comment:
-  1. Wait (up to 3 s) for the cell's first enabled `button` (the comment button, which
-     appears once the cell has hours) and click it.
-  2. Wait for `.MuiPopover-paper textarea:not([aria-hidden])`, set the text the same way.
-  3. Wait for the popover's **first `button`** to be enabled (assumed to be *save*),
-     click it, wait for the popover to close.
+  1. Wait (up to 3 s) for the cell's enabled `button[aria-label="Edit description"]`
+     (it appears once the cell has hours) and click it.
+  2. Wait for `[role="presentation"] textarea:not([aria-hidden])`, set the text the same
+     way.
+  3. In that modal root, wait for the button whose text is *Update* / *Save* (falling
+     back to the last `button`) to be enabled, click it, wait for the `textarea` to leave
+     the DOM.
 - Captures `pointerdown` / `pointermove` / `pointerup` (and `click` while Alt is held)
   so Agileday does not focus the field or open the comment during a drag.
 - Health check: task rows with hour inputs exist. At runtime it reports a problem if the
-  comment button, the popover or its save button cannot be found.
+  comment button, the comment dialog or its save button cannot be found.
 
 ### agileday-accordion
 

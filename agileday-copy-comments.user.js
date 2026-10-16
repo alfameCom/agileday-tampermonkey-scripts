@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Agileday: kommenttikuplan kopiointi oikealla klikillä
 // @namespace    alfameCom.agileday-tampermonkey-scripts
-// @version      0.2.0
+// @version      0.2.1
 // @description  Time reporting: oikea klikkaus tuntisolun kommenttikuplaan kopioi kommentin leikepöydälle ja näyttää sen toastissa
 // @match        https://*.agileday.io/*
 // @grant        GM_setClipboard
@@ -14,19 +14,20 @@
 (function () {
   'use strict';
 
-  // Täytetty kupla. Kommentin teksti on ikonin aria-labelissa, myös
-  // "From previous month" -soluissa, joita ei voi klikata.
-  const ICON = 'svg[data-testid="CommentAdded2Icon"]';
+  // Täytetty kupla. Kommentin teksti on ikonin aria-labelissa (tyhjällä
+  // kuplalla sitä ei ole), myös "From previous month" -soluissa, joita ei voi klikata.
+  const BUBBLE = 'button[aria-label="Edit description"]';
+  const ICON = `${BUBBLE} svg[aria-label]`;
   const HIT_PAD = 6; // px kuplan ympärillä, joka lasketaan osumaksi
   const DEBUG = false;
 
   // Täytetyissä soluissa on aina kommenttikupla (tyhjä tai täytetty).
   const health = pjHealth('agileday-copy-comments', {
     checks: {
-      'kommenttikuplat tuntisoluissa (svg[data-testid*="Comment"])': () => {
+      'kommenttikuplat tuntisoluissa (button[aria-label="Edit description"])': () => {
         const filled = [...document.querySelectorAll('table td input')].filter((i) => i.value.trim());
         if (!filled.length) return null;
-        return filled.some((i) => i.closest('td')?.querySelector('svg[data-testid*="Comment"]'));
+        return filled.some((i) => i.closest('td')?.querySelector(`${BUBBLE} svg`));
       },
     },
   });

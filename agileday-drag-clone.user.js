@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Agileday: tuntikirjauksen kloonaus raahaamalla
 // @namespace    alfameCom.agileday-tampermonkey-scripts
-// @version      0.5.0
+// @version      0.5.1
 // @description  Time reporting: Alt pohjassa raahaa tuntisolun toiseen saman taskin soluun (tunnit ja kommentti kopioituvat) tai tyhjennä solu ×-napista
 // @match        https://*.agileday.io/*
 // @grant        none
@@ -16,9 +16,12 @@
 
   const ROW = 'tr[data-testid="task-row"]';
   const INPUT = 'input[data-testid^="input-"]';
-  // Täytetyn kuplan ikoni; kommentin teksti on sen aria-labelissa.
-  const COMMENT_ICON = 'svg[data-testid="CommentAdded2Icon"]';
-  const POPOVER = '.MuiPopover-paper';
+  const COMMENT_BTN = 'button[aria-label="Edit description"]';
+  // Täytetyn kuplan ikonilla on aria-label = kommentin teksti, tyhjällä ei ole.
+  const COMMENT_ICON = `${COMMENT_BTN} svg[aria-label]`;
+  // MUI-modaalin juuri; kommenttidialogin paperin luokka ei ole vakaa.
+  const POPUP = '[role="presentation"]';
+  const SAVE_TEXT = /^(update|save|tallenna|päivitä)$/i;
   const DEBUG = false;
 
   const health = pjHealth('agileday-drag-clone', {
@@ -137,25 +140,28 @@
 
     // Kommenttinappi ilmestyy vasta, kun solussa on tunnit.
     const btn = await waitFor(() => {
-      const b = td.querySelector('button:not(.pj-clone-del)');
+      const b = td.querySelector(COMMENT_BTN);
       return b && !b.disabled ? b : null;
     });
     if (!btn) throw domError('Kommenttinappia ei löytynyt');
     btn.click();
 
     const area = await waitFor(() =>
-      document.querySelector(`${POPOVER} textarea:not([aria-hidden])`));
+      document.querySelector(`${POPUP} textarea:not([aria-hidden])`));
     if (!area) throw domError('Kommenttidialogi ei auennut');
     area.focus();
     setNativeValue(area, comment);
 
+    // Tallennusnappi tekstin mukaan ("Update"), muuten dialogin viimeinen nappi.
+    const popup = area.closest(POPUP);
     const save = await waitFor(() => {
-      const b = area.closest(POPOVER).querySelector('button');
+      const btns = [...popup.querySelectorAll('button')];
+      const b = btns.find((x) => SAVE_TEXT.test(x.textContent.trim())) || btns.at(-1);
       return b && !b.disabled ? b : null;
     });
     if (!save) throw domError('Kommentin tallennusnappia ei löytynyt');
     save.click();
-    await waitFor(() => !document.querySelector(POPOVER));
+    await waitFor(() => !area.isConnected);
   }
 
   let drag = null; // { src, data, ghost, dst }
