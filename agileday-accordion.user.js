@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Agileday: projektit ja alapalkit haitareiksi
 // @namespace    alfameCom.agileday-tampermonkey-scripts
-// @version      0.5.0
+// @version      0.5.1
 // @description  Time reporting: projektiryhmät avautuvat ja sulkeutuvat, tunnittomat ovat oletuksena kiinni; Submit- ja Agent-palkki ovat kiinni, kun viikko ei ole UNSUBMITTED; jäädytysilmoituksen voi sulkea
 // @match        https://*.agileday.io/*
 // @grant        none
@@ -53,7 +53,9 @@
 
     [data-pj-foot="closed"] {
       padding: 0 !important; min-height: 0 !important; height: 20px !important;
-      border: 0 !important; box-shadow: none !important; background: transparent !important;
+      border: 0 !important; box-shadow: none !important;
+      /* Läpinäkymätön, koska taulukon rivit rullaavat palkin alta. */
+      background: var(--pj-foot-bg, #fff) !important;
     }
     [data-pj-footwrap="closed"] { padding-bottom: 0 !important; }
     [data-pj-foot="closed"] > :not(.pj-acc-foot) { display: none !important; }
@@ -191,6 +193,15 @@
     return bar;
   }
 
+  // Ensimmäinen läpinäkymätön tausta ylöspäin.
+  function opaqueBg(el) {
+    for (; el; el = el.parentElement) {
+      const bg = getComputedStyle(el).backgroundColor;
+      if (bg && bg !== 'transparent' && !/rgba\(.*,\s*0\)$/.test(bg)) return bg;
+    }
+    return '#fff';
+  }
+
   function findFooter() {
     const btn = [...document.querySelectorAll('button')]
       .find((b) => /submit/i.test(b.textContent.trim()) && !b.closest('table'));
@@ -238,7 +249,11 @@
       foot.appendChild(handle);
     }
     const state = isOpen ? 'open' : 'closed';
-    if (foot.getAttribute('data-pj-foot') !== state) foot.setAttribute('data-pj-foot', state);
+    if (foot.getAttribute('data-pj-foot') !== state) {
+      const bg = opaqueBg(foot.parentElement);
+      if (foot.style.getPropertyValue('--pj-foot-bg') !== bg) foot.style.setProperty('--pj-foot-bg', bg);
+      foot.setAttribute('data-pj-foot', state);
+    }
     foot.parentElement?.setAttribute('data-pj-footwrap', state);
     agentBar = findAgentBar();
     if (agentBar && agentBar.getAttribute('data-pj-agent') !== state) {
