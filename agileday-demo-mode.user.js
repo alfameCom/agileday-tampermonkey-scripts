@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Agileday: demotila videoita varten
 // @namespace    alfameCom.agileday-tampermonkey-scripts
-// @version      0.3.0
+// @version      0.4.0
 // @description  Ctrl+Alt+D tai #pj-demo: henkilön, asiakkaiden, projektien, taskien ja kuvausten nimet korvataan geneerisillä, jotta näkymästä voi tallentaa videon
 // @match        https://*.agileday.io/*
 // @grant        none
@@ -179,12 +179,33 @@
     }
   }
 
+  // Kommenttikentät: Agiledayn kommenttidialogi ja agileday-merge-task-rowsin
+  // ikkuna. Vain näkyvä arvo vaihdetaan, ilman input-tapahtumaa, joten React ja
+  // ikkuna pitävät oikean kommentin: muokkaamaton kirjaus tallentuu oikeana.
+  // React voi palauttaa oikean arvon uudelleenpiirrossa; silloin korvataan uudestaan.
+  const masked = new WeakMap(); // textarea -> { real, value }
+  function processComments() {
+    for (const ta of document.querySelectorAll('.pj-merge-dialog textarea, [role="presentation"] textarea:not([aria-hidden])')) {
+      const m = masked.get(ta);
+      if (m) {
+        if (ta.value === m.real) ta.value = m.value;
+        continue;
+      }
+      const real = ta.value.trim();
+      if (!real) continue;
+      const value = fake('description', real);
+      masked.set(ta, { real: ta.value, value });
+      ta.value = value;
+    }
+  }
+
   let observer = null;
 
   function process() {
     processCells();
     processProjectRows();
     processTaskNames();
+    processComments();
     processAll();
     // Omat muutokset eivät käynnistä uutta kierrosta.
     observer?.takeRecords();

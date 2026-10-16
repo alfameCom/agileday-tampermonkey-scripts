@@ -26,7 +26,8 @@ misbehaves, disable it in Tampermonkey and Agileday is back to normal.
   - Time card: [sticky-totals](#agileday-sticky-totals) ·
     [copy-comments](#agileday-copy-comments) · [day-colors](#agileday-day-colors) ·
     [drag-clone](#agileday-drag-clone) · [accordion](#agileday-accordion) ·
-    [plain-task-names](#agileday-plain-task-names)
+    [plain-task-names](#agileday-plain-task-names) ·
+    [merge-task-rows](#agileday-merge-task-rows)
   - My hours: [my-hours](#agileday-my-hours)
   - Anywhere: [demo-mode](#agileday-demo-mode)
 - [When something stops working](#when-something-stops-working)
@@ -55,6 +56,7 @@ misbehaves, disable it in Tampermonkey and Agileday is back to normal.
 | `agileday-drag-clone` | Alt-drag a time entry (with its comment) to another day of the same task; Alt shows a × that clears a cell. | [install](https://raw.githubusercontent.com/alfameCom/agileday-tampermonkey-scripts/main/agileday-drag-clone.user.js) |
 | `agileday-accordion` | Collapsible project groups (projects without hours start closed), collapsible Submit/Agent bars, dismissible freeze notice. | [install](https://raw.githubusercontent.com/alfameCom/agileday-tampermonkey-scripts/main/agileday-accordion.user.js) |
 | `agileday-plain-task-names` | Task rows with hours this week show the task name as plain text instead of a dropdown. | [install](https://raw.githubusercontent.com/alfameCom/agileday-tampermonkey-scripts/main/agileday-plain-task-names.user.js) |
+| `agileday-merge-task-rows` | Shows the rows of the same task as one row; several entries on one day appear as a sum with a count and open in a dialog for editing. | [install](https://raw.githubusercontent.com/alfameCom/agileday-tampermonkey-scripts/main/agileday-merge-task-rows.user.js) |
 | `agileday-my-hours` | *My hours* tab: quick date ranges, expand/collapse all, custom grouping with sorting and filters, persistent column widths, column hiding and ordering. | [install](https://raw.githubusercontent.com/alfameCom/agileday-tampermonkey-scripts/main/agileday-my-hours.user.js) |
 | `agileday-demo-mode` | Replaces names, customers, projects, tasks and descriptions with generic ones for screen recordings (Ctrl+Alt+D). | [install](https://raw.githubusercontent.com/alfameCom/agileday-tampermonkey-scripts/main/agileday-demo-mode.user.js) |
 
@@ -170,6 +172,34 @@ that hides it. Hiding is temporary: reloading the page brings the notice back.
   has hours, clear its hours first.
 - Only the view changes; no data is modified.
 
+### agileday-merge-task-rows
+
+![Two rows of the same task shown as one; the day with two entries shows their sum and a count](img/time-card-merge-task-rows.png)
+
+- In Agileday, a second entry for the same task on the same day needs a row of its own.
+  This script shows the rows of the same task within a project as **one row**, once all
+  of them have hours this week.
+- A day with several entries shows their **sum** and a purple **count**. Hovering shows
+  the entries one by one.
+
+![The day's entries as separate items, each with hours and a comment](img/time-card-merge-task-rows-dialog.png)
+
+- Clicking such a cell opens a dialog with the entries as separate items: edit the
+  hours and comment, **×** removes an entry (*Poista kirjaus* = "Remove entry"), and
+  **+ Lisää kirjaus** ("Add entry") adds one. **Tallenna** ("Save", or Cmd/Ctrl+Enter)
+  writes the changes into Agileday's own fields and comment dialog one at a time;
+  **Peruuta** ("Cancel") or **Esc** discards them. *Yhteensä* = "Total".
+- A new entry goes into a free cell of one of the task's rows. If every row already has
+  an entry on that day, *Lisää kirjaus* is greyed out and its tooltip explains why: add
+  the same task again with the project's **Add task** button. The new row stays a normal
+  row until you type hours into it, and is merged after that.
+- A day with a single entry works as before.
+- The row's weekly total is the sum of all merged rows. The merged row's trash icon is
+  hidden, because it would only delete one of the rows.
+- Locked entries (e.g. the previous month) are shown in the dialog but cannot be
+  changed.
+- `agileday-drag-clone` copies only the main row's entry of a merged cell.
+
 ### agileday-my-hours
 
 The **My hours** tab of Time reporting (`/hours?tab=hoursActuals`).
@@ -259,6 +289,10 @@ Agileday support. **Ctrl+Alt+D** toggles it, or add `#pj-demo` to the end of the
   replaced.
 - Time card task names are replaced when `agileday-plain-task-names` shows them as
   text. A task name inside the dropdown (a row without hours) stays real.
+- Comments are replaced in Agileday's comment dialog and in the
+  `agileday-merge-task-rows` dialog. Only the displayed text changes: an entry you do
+  not edit is saved with its real comment. If you edit a comment in demo mode, what you
+  see in the field is saved.
 
 > Demo mode only masks what is **visible on the page**. Real data is still present in
 > network responses (browser developer tools), in some tooltips and in input field
