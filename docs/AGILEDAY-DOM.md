@@ -19,8 +19,9 @@ before a larger change to the time card or My hours is always welcome, but not e
 
 | Dependency | Used by |
 |---|---|
-| `data-testid` values `project-row`, `task-row` on time card rows | accordion, drag-clone |
-| `data-testid` prefix `input-` on hour inputs | accordion, drag-clone |
+| `data-testid` values `project-row`, `task-row` on time card rows | accordion, drag-clone, plain-task-names, demo-mode |
+| `data-testid` prefix `input-` on hour inputs | accordion, drag-clone, plain-task-names |
+| Task picker `[data-testid^="task-autocomplete-"]` on task rows, its `input` value being the task name | plain-task-names |
 | `data-testid` `total-YYYY-MM-DD` on summary row cells | sticky-totals, day-colors, accordion |
 | Summary cell structure: one wrapper element whose first two children are *Reported* and *Flex*, as `h:mm` or `-` | day-colors |
 | Day columns aligned by `cellIndex` across all rows of the time card table, header row included | day-colors |
@@ -134,6 +135,20 @@ Collapsible project groups, collapsible Submit/Agent bars, dismissible freeze no
 - Health checks: project rows and task rows exist (when the week has inputs); the Submit
   bar is found.
 
+### agileday-plain-task-names
+
+Shows the task name as plain text on task rows that have hours this week.
+
+- Task rows `tr[data-testid="task-row"]`, hour inputs `input[data-testid^="input-"]`
+  (a row has hours when any of them has a value).
+- Task picker `[data-testid^="task-autocomplete-"]`; the name is its `input`'s value.
+  The picker's parent element gets `data-pj-task-text="<name>"`; CSS hides the picker and
+  draws the name with `::before`, so no nodes are added to React's tree.
+- The next sibling `svg` of that parent (the *Comment required* icon) is dimmed and
+  placed right after the name.
+- A picker that has focus is left alone, so choosing a task is not interrupted.
+- Health check: task rows contain a task picker with an `input`.
+
 ### agileday-my-hours
 
 Quick ranges, expand/collapse all, custom grouping with sorting and filters, persistent
@@ -184,6 +199,12 @@ Replaces names with placeholders for screen recordings (Ctrl+Alt+D or `#pj-demo`
   `task`, `description` and `__tree_data_group__`. For the tree column the row's
   `aria-level` decides the kind: `1` person, `2` *Customer · Project* (split on
   `' · '`), `3` task.
+- Time card project rows `tr[data-testid="project-row"]`: in the first cell's first
+  element, the first child of its first child is the customer name, and the
+  `p > button` of its second child is the project name (the following ` · Other` text
+  is kept).
+- Task names drawn by plain-task-names: reads `data-pj-task-text`, writes the
+  replacement to `data-pj-demo-text`, which CSS shows instead in demo mode.
 - Hides `.MuiAvatar-root img`.
 - Rewrites text node contents in place from a `MutationObserver` callback, which runs
   before paint. Outside the grid, only values already seen in the grid are replaced.
@@ -196,7 +217,7 @@ All keys start with `pj-`.
 | Key | Storage | Script |
 |---|---|---|
 | `pj-myhours-cols` | localStorage | my-hours |
-| `pj-demo-map` | localStorage | demo-mode |
+| `pj-demo-map-v2` | localStorage | demo-mode (removes the older `pj-demo-map`) |
 | `pj-demo` | sessionStorage | demo-mode |
 | `pj-health-dismissed` | sessionStorage | `lib/pj-health.js` |
 
@@ -228,6 +249,9 @@ What users were missing:
     view is what you need to check a week against a calendar;
   - no sorting or filtering within groups;
   - column widths and layout are not remembered between visits.
+- **A busy task column** (plain-task-names). Every task row keeps an editable task
+  dropdown even after hours have been entered, which makes the table hard to read; once
+  a row has hours the task rarely changes.
 - **Recording the UI safely** (demo-mode). There is no demo or privacy mode for
   screenshots, recordings and support tickets.
 

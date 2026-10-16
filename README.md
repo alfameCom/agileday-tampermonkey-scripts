@@ -25,7 +25,8 @@ misbehaves, disable it in Tampermonkey and Agileday is back to normal.
 - [Features](#features)
   - Time card: [sticky-totals](#agileday-sticky-totals) ·
     [copy-comments](#agileday-copy-comments) · [day-colors](#agileday-day-colors) ·
-    [drag-clone](#agileday-drag-clone) · [accordion](#agileday-accordion)
+    [drag-clone](#agileday-drag-clone) · [accordion](#agileday-accordion) ·
+    [plain-task-names](#agileday-plain-task-names)
   - My hours: [my-hours](#agileday-my-hours)
   - Anywhere: [demo-mode](#agileday-demo-mode)
 - [When something stops working](#when-something-stops-working)
@@ -53,6 +54,7 @@ misbehaves, disable it in Tampermonkey and Agileday is back to normal.
 | `agileday-day-colors` | Highlights today, colours hours and flex by how full the day is, dims future days. | [install](https://raw.githubusercontent.com/alfameCom/agileday-tampermonkey-scripts/main/agileday-day-colors.user.js) |
 | `agileday-drag-clone` | Alt-drag a time entry (with its comment) to another day of the same task; Alt shows a × that clears a cell. | [install](https://raw.githubusercontent.com/alfameCom/agileday-tampermonkey-scripts/main/agileday-drag-clone.user.js) |
 | `agileday-accordion` | Collapsible project groups (projects without hours start closed), collapsible Submit/Agent bars, dismissible freeze notice. | [install](https://raw.githubusercontent.com/alfameCom/agileday-tampermonkey-scripts/main/agileday-accordion.user.js) |
+| `agileday-plain-task-names` | Task rows with hours this week show the task name as plain text instead of a dropdown. | [install](https://raw.githubusercontent.com/alfameCom/agileday-tampermonkey-scripts/main/agileday-plain-task-names.user.js) |
 | `agileday-my-hours` | *My hours* tab: quick date ranges, expand/collapse all, custom grouping with sorting and filters, persistent column widths, column hiding and ordering. | [install](https://raw.githubusercontent.com/alfameCom/agileday-tampermonkey-scripts/main/agileday-my-hours.user.js) |
 | `agileday-demo-mode` | Replaces names, customers, projects, tasks and descriptions with generic ones for screen recordings (Ctrl+Alt+D). | [install](https://raw.githubusercontent.com/alfameCom/agileday-tampermonkey-scripts/main/agileday-demo-mode.user.js) |
 
@@ -155,6 +157,19 @@ while they are open.
 **Freeze notice.** The "This week will freeze…" notice gets a **×** on its right edge
 that hides it. Hiding is temporary: reloading the page brings the notice back.
 
+### agileday-plain-task-names
+
+![Task names as plain text, with the comment-required bubble right after the name](img/time-card-plain-task-names.png)
+
+- On the time card, a task row that has hours this week shows the task name as plain
+  text instead of the task dropdown. Long names wrap instead of being cut off.
+- The task's *comment required* bubble sits right after the name, dimmed. It returns to
+  full colour under the mouse.
+- Rows without hours (for example one you just added with **Add task**) keep the
+  dropdown, so you can still pick or change the task. To change the task of a row that
+  has hours, clear its hours first.
+- Only the view changes; no data is modified.
+
 ### agileday-my-hours
 
 The **My hours** tab of Time reporting (`/hours?tab=hoursActuals`).
@@ -226,8 +241,11 @@ Grouping, sort order, widths, hidden columns and column order are saved in
 Demo mode for screen recordings and screenshots, for example when reporting an issue to
 Agileday support. **Ctrl+Alt+D** toggles it, or add `#pj-demo` to the end of the URL.
 
+![Time card in demo mode](img/time-card-demo-mode.png)
+
 - Your name → "Jane Doe" (also in the sidebar), customers → "Customer A Ltd",
-  projects → "Project A", tasks → "Task 1", descriptions → generic texts
+  projects → "Project A – Customer portal renewal", tasks → "Task 1 – API integration",
+  descriptions → generic texts
   ("Development", "Weekly meeting", …). The profile picture is hidden.
 - Hours and dates are not changed.
 - The same real value always gets the same replacement, also in the custom grouping of
@@ -236,8 +254,11 @@ Agileday support. **Ctrl+Alt+D** toggles it, or add `#pj-demo` to the end of the
   recording.
 - Demo mode is per browser tab. Turning it off reloads the page, which brings back the
   real values.
-- Values are recognised from the *My hours* table. On other pages, only values already
-  seen on the *My hours* tab are replaced.
+- Values are recognised from the *My hours* table and from the time card's project
+  rows (customer and project). On other pages, only values already seen there are
+  replaced.
+- Time card task names are replaced when `agileday-plain-task-names` shows them as
+  text. A task name inside the dropdown (a row without hours) stays real.
 
 > Demo mode only masks what is **visible on the page**. Real data is still present in
 > network responses (browser developer tools), in some tooltips and in input field
