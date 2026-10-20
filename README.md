@@ -27,7 +27,8 @@ misbehaves, disable it in Tampermonkey and Agileday is back to normal.
     [copy-comments](#agileday-copy-comments) · [day-colors](#agileday-day-colors) ·
     [drag-clone](#agileday-drag-clone) · [accordion](#agileday-accordion) ·
     [plain-task-names](#agileday-plain-task-names) ·
-    [merge-task-rows](#agileday-merge-task-rows)
+    [merge-task-rows](#agileday-merge-task-rows) ·
+    [lock-unplanned](#agileday-lock-unplanned)
   - My hours: [my-hours](#agileday-my-hours)
   - Anywhere: [demo-mode](#agileday-demo-mode)
 - [When something stops working](#when-something-stops-working)
@@ -57,6 +58,7 @@ misbehaves, disable it in Tampermonkey and Agileday is back to normal.
 | `agileday-accordion` | Collapsible project groups (projects without hours start closed), collapsible Submit/Agent bars, dismissible freeze notice. | [install](https://raw.githubusercontent.com/alfameCom/agileday-tampermonkey-scripts/main/agileday-accordion.user.js) |
 | `agileday-plain-task-names` | Task rows with hours this week show the task name as plain text instead of a dropdown. | [install](https://raw.githubusercontent.com/alfameCom/agileday-tampermonkey-scripts/main/agileday-plain-task-names.user.js) |
 | `agileday-merge-task-rows` | Shows the rows of the same task as one row; several entries on one day appear as a sum with a count and open in a dialog for editing. | [install](https://raw.githubusercontent.com/alfameCom/agileday-tampermonkey-scripts/main/agileday-merge-task-rows.user.js) |
+| `agileday-lock-unplanned` | Locks projects without an allocation (*UNPLANNED*): no hours can be entered and no tasks added. | [install](https://raw.githubusercontent.com/alfameCom/agileday-tampermonkey-scripts/main/agileday-lock-unplanned.user.js) |
 | `agileday-my-hours` | *My hours* tab: quick date ranges, expand/collapse all, custom grouping with sorting and filters, persistent column widths, column hiding and ordering. | [install](https://raw.githubusercontent.com/alfameCom/agileday-tampermonkey-scripts/main/agileday-my-hours.user.js) |
 | `agileday-demo-mode` | Replaces names, customers, projects, tasks and descriptions with generic ones for screen recordings (Ctrl+Alt+D). | [install](https://raw.githubusercontent.com/alfameCom/agileday-tampermonkey-scripts/main/agileday-demo-mode.user.js) |
 
@@ -199,6 +201,25 @@ that hides it. Hiding is temporary: reloading the page brings the notice back.
 - Locked entries (e.g. the previous month) are shown in the dialog but cannot be
   changed.
 - `agileday-drag-clone` copies only the main row's entry of a merged cell.
+
+### agileday-lock-unplanned
+
+![Two UNPLANNED projects locked: striped read-only cells, dimmed Add task, red chip](img/time-card-lock-unplanned.png)
+
+- With Agileday admin rights you can enter hours on a project that has no allocation
+  (the **UNPLANNED** chip), which messes up billing. This script locks such projects
+  on the time card.
+- The project's hour cells are read-only and striped, and the UNPLANNED chip turns
+  red. Existing hours stay visible.
+- The project's **Add task** button is dimmed and does nothing. Clicking it or a locked
+  cell shows the reason in a toast (*Projektilla ei ole allokaatiota …* = "The project
+  has no allocation; hours cannot be entered because they would mess up billing. Ask
+  the project manager for an allocation.").
+- Hours entered by mistake can still be removed with the row's trash icon, and comments
+  can still be edited.
+- When the project gets an allocation and the chip disappears, the lock is removed.
+- `agileday-drag-clone` and `agileday-merge-task-rows` respect the lock. Agileday's own
+  **Copy previous** and **Fill allocation** do not go through the script.
 
 ### agileday-my-hours
 

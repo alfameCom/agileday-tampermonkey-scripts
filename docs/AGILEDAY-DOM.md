@@ -19,7 +19,8 @@ before a larger change to the time card or My hours is always welcome, but not e
 
 | Dependency | Used by |
 |---|---|
-| `data-testid` values `project-row`, `task-row` on time card rows | accordion, drag-clone, plain-task-names, merge-task-rows, demo-mode |
+| `data-testid` values `project-row`, `task-row` on time card rows | accordion, drag-clone, plain-task-names, merge-task-rows, lock-unplanned, demo-mode |
+| Chip text `Unplanned` (any case) in a project row's first cell; button text `Add task` | lock-unplanned |
 | `data-testid` prefix `input-` on hour inputs | accordion, drag-clone, plain-task-names, merge-task-rows |
 | Task picker `[data-testid^="task-autocomplete-"]` on task rows, its `input` value being the task name | plain-task-names, merge-task-rows |
 | `data-testid` `total-YYYY-MM-DD` on summary row cells | sticky-totals, day-colors, accordion |
@@ -175,6 +176,22 @@ entries in a dialog. **Changes data**, always through Agileday's own UI.
 - Health check: task rows contain a task picker with an `input`. At runtime it reports
   a problem if the comment button, the dialog or its save button cannot be found.
 
+### agileday-lock-unplanned
+
+Locks the time card rows of projects that have no allocation.
+
+- Project rows `tr[data-testid="project-row"]`: a project is locked when a leaf element
+  in its first cell has the text `unplanned` (case-insensitive; the capitals come from
+  CSS). The chip is that element's closest `.MuiChip-root`.
+- The following `tr[data-testid="task-row"]` rows up to the next project row are the
+  project's tasks. Their `input[data-testid^="input-"]` get `readOnly = true` and
+  `data-pj-unplanned-lock`; inputs Agileday itself made read-only are left alone. The
+  lock is re-applied on `focusin` in case a re-render resets it.
+- The project row's `button` with the text `Add task` gets a class; its clicks are
+  stopped in the capture phase.
+- When the chip disappears, the script restores the inputs it locked.
+- Health check: project rows exist.
+
 ### agileday-my-hours
 
 Quick ranges, expand/collapse all, custom grouping with sorting and filters, persistent
@@ -283,6 +300,9 @@ What users were missing:
   another row of the same task, so the time card grows and the day's entries are split
   across rows. One row per task with the day's entries listed in the cell's dialog
   would be easier to read and edit.
+- **Hours on unallocated projects** (lock-unplanned). Admin rights allow entering hours
+  on a project marked UNPLANNED, which then ends up in billing. An option to block time
+  entry on projects without an allocation, for admins too, would make this unnecessary.
 - **A busy task column** (plain-task-names). Every task row keeps an editable task
   dropdown even after hours have been entered, which makes the table hard to read; once
   a row has hours the task rarely changes.
