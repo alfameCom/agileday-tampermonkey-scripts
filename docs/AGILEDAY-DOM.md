@@ -30,11 +30,15 @@ before a larger change to the time card or My hours is always welcome, but not e
 | Comment dialog: a `textarea` inside a `[role="presentation"]` modal root, saved with a button labelled *Update* (or *Save*) | drag-clone, merge-task-rows, demo-mode |
 | Button labels `Submit`, `Current month`, `Current year`; text `Agent`; chip text `UNSUBMITTED`; the word *freeze*/*frozen* in the freeze notice | sticky-totals, accordion, my-hours |
 | My hours MUI DataGrid: `role`, `aria-expanded`, `aria-level`, `data-id`, `data-field`; field names `__tree_data_group__`, `date`, `project`, `task`, `description`; a header title starting with *Actual* | my-hours, demo-mode |
+| Time card: the hour cell component's props `hour` (`id`, `minutes`, `status`, `description`), `timeCardRowId` and `updateHours`, reached through React fiber props | unsubmitted |
+| Week status chip outside the table (`Unsubmitted`, `Submitted`, `Approved`, …) next to the `Submit` button | unsubmitted, accordion |
 | My hours: DataGrid `apiRef` and the date range picker's `onChange`/`onAccept`, reached through React fiber props | my-hours |
 
-The last row is the one we know is fragile. It has DOM fallbacks, but they are weaker.
-A public, stable way to do the same would help: for example URL parameters for the date
-range and a persisted column layout. See [UX gaps](#ux-gaps-the-scripts-fill).
+The React fiber rows are the ones we know are fragile. The My hours one has DOM
+fallbacks, but they are weaker; unsubmitted has none and simply stays off when the props
+are missing. A public, stable way to do the same would help: for example URL parameters
+for the date range, a persisted column layout, and entry ids and dates as `data-`
+attributes on the hour cells. See [UX gaps](#ux-gaps-the-scripts-fill).
 
 ## Routes
 
@@ -192,6 +196,31 @@ Locks the time card rows of projects that have no allocation.
 - When the chip disappears, the script restores the inputs it locked.
 - Health check: project rows exist.
 
+### agileday-unsubmitted
+
+Shows what has changed on an UNSUBMITTED week since it was last submitted, and reverts
+changes. **Changes data** when reverting, always through Agileday's own UI.
+
+- Entry data: from each hour input, walks up the React fiber (`__reactFiber$…`) to the
+  component whose props contain `hour` and `updateHours`, and reads `hour.id`,
+  `hour.minutes`, `hour.description` and `timeCardRowId`. Empty cells carry a
+  placeholder `hour` with `minutes` 0 and status `NEW`; only entries with minutes are
+  used. An entry's own `status` (`SUBMITTED`) only means it is saved, so it is not used.
+- The date of a cell is the `YYYY-MM-DD` suffix of the input's `data-testid`; the week is
+  identified by its earliest date. The day label comes from the input's `aria-label`
+  (`Hours for 20 Oct 2026`).
+- Week status: a `.MuiChip-root` outside the table whose text is `Unsubmitted`,
+  `Submitted`, `Approved`, etc. A snapshot is saved when the same week has shown a
+  non-unsubmitted status for over 1.5 s, and when a `Submit` button outside the table is
+  clicked (capture phase, before Agileday handles it).
+- Customer and project names come from the project row (same structure as demo-mode),
+  the task name from the task picker's `input`.
+- Reverting: hours as in drag-clone, comments through the cell's
+  `button[aria-label="Edit description"]` and the comment dialog. A deleted entry is
+  written to the empty cell of the same `timeCardRowId` (or, for older snapshots, the
+  same customer, project and task names) on the same date.
+- Health check: entries with hours have `hour.id` and `hour.minutes` in the props.
+
 ### agileday-my-hours
 
 Quick ranges, expand/collapse all, custom grouping with sorting and filters, persistent
@@ -265,6 +294,7 @@ All keys start with `pj-`.
 |---|---|---|
 | `pj-myhours-cols` | localStorage | my-hours |
 | `pj-demo-map-v2` | localStorage | demo-mode (removes the older `pj-demo-map`) |
+| `pj-unsub-snapshots` | localStorage | unsubmitted |
 | `pj-demo` | sessionStorage | demo-mode |
 | `pj-health-dismissed` | sessionStorage | `lib/pj-health.js` |
 
@@ -303,6 +333,10 @@ What users were missing:
 - **Hours on unallocated projects** (lock-unplanned). Admin rights allow entering hours
   on a project marked UNPLANNED, which then ends up in billing. An option to block time
   entry on projects without an allocation, for admins too, would make this unnecessary.
+- **Knowing what Submit sends** (unsubmitted). An UNSUBMITTED week gives no hint of
+  what changed since the last submit, and a deleted entry leaves no trace at all. A
+  per-week change log (or marking changed entries) and a way to undo changes before
+  resubmitting would cover this.
 - **A busy task column** (plain-task-names). Every task row keeps an editable task
   dropdown even after hours have been entered, which makes the table hard to read; once
   a row has hours the task rarely changes.

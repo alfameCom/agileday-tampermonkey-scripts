@@ -28,7 +28,8 @@ misbehaves, disable it in Tampermonkey and Agileday is back to normal.
     [drag-clone](#agileday-drag-clone) · [accordion](#agileday-accordion) ·
     [plain-task-names](#agileday-plain-task-names) ·
     [merge-task-rows](#agileday-merge-task-rows) ·
-    [lock-unplanned](#agileday-lock-unplanned)
+    [lock-unplanned](#agileday-lock-unplanned) ·
+    [unsubmitted](#agileday-unsubmitted)
   - My hours: [my-hours](#agileday-my-hours)
   - Anywhere: [demo-mode](#agileday-demo-mode)
 - [When something stops working](#when-something-stops-working)
@@ -59,6 +60,7 @@ misbehaves, disable it in Tampermonkey and Agileday is back to normal.
 | `agileday-plain-task-names` | Task rows with hours this week show the task name as plain text instead of a dropdown. | [install](https://raw.githubusercontent.com/alfameCom/agileday-tampermonkey-scripts/main/agileday-plain-task-names.user.js) |
 | `agileday-merge-task-rows` | Shows the rows of the same task as one row; several entries on one day appear as a sum with a count and open in a dialog for editing. | [install](https://raw.githubusercontent.com/alfameCom/agileday-tampermonkey-scripts/main/agileday-merge-task-rows.user.js) |
 | `agileday-lock-unplanned` | Locks projects without an allocation (*UNPLANNED*): no hours can be entered and no tasks added. | [install](https://raw.githubusercontent.com/alfameCom/agileday-tampermonkey-scripts/main/agileday-lock-unplanned.user.js) |
+| `agileday-unsubmitted` | On an *UNSUBMITTED* week, shows what has changed since the last submit (new, changed, deleted entries) and reverts changes; otherwise shows what Submit will send. | [install](https://raw.githubusercontent.com/alfameCom/agileday-tampermonkey-scripts/main/agileday-unsubmitted.user.js) |
 | `agileday-my-hours` | *My hours* tab: quick date ranges, expand/collapse all, custom grouping with sorting and filters, persistent column widths, column hiding and ordering. | [install](https://raw.githubusercontent.com/alfameCom/agileday-tampermonkey-scripts/main/agileday-my-hours.user.js) |
 | `agileday-demo-mode` | Replaces names, customers, projects, tasks and descriptions with generic ones for screen recordings (Ctrl+Alt+D). | [install](https://raw.githubusercontent.com/alfameCom/agileday-tampermonkey-scripts/main/agileday-demo-mode.user.js) |
 
@@ -220,6 +222,38 @@ that hides it. Hiding is temporary: reloading the page brings the notice back.
 - When the project gets an allocation and the chip disappears, the lock is removed.
 - `agileday-drag-clone` and `agileday-merge-task-rows` respect the lock. Agileday's own
   **Copy previous** and **Fill allocation** do not go through the script.
+
+### agileday-unsubmitted
+
+![Changes since the last submit: a new and a deleted entry, marked in the cells and listed with Revert buttons](img/time-card-unsubmitted.png)
+
+- Agileday's **UNSUBMITTED** is the status of the whole week: Submit always sends all
+  of the week's entries. The page does not tell you what has changed since the week was
+  last submitted.
+- The script saves a snapshot of the week's entries in your browser when the week is
+  submitted (its chip shows e.g. *SUBMITTED* or *APPROVED*) and when you press
+  **Submit**.
+- When the week is UNSUBMITTED again, a button next to the chip shows the number of
+  changes (*Muutokset: 1 uutta · 1 poistettu* = "Changes: 1 new · 1 deleted").
+  Changed cells get a dot: green for new, orange for changed, red for deleted (the cell
+  left empty).
+- Clicking the button lists the changes (*Uusi* = new, *Muutettu* = changed,
+  *Poistettu* = deleted) with the day, customer · project · task, hours and comment;
+  old values are shown struck through. Clicking a row scrolls to its cell.
+- **Palauta** ("Revert") next to a change undoes it: a new entry is removed, a changed
+  entry gets its old hours and comment back, and a deleted entry is written back to the
+  same row and day (the row must still exist and the cell be empty). **Palauta kaikki**
+  ("Revert all") reverts the whole week to the last submit after a confirmation.
+  Reverting types into Agileday's own fields and comment dialog, like
+  `agileday-drag-clone`.
+- A cell that was cleared and typed again counts as one change, not as a deletion and a
+  new entry.
+- Without a snapshot (the week was never submitted, or it was submitted before the
+  script was installed or from another browser), the button shows how many entries and
+  hours Submit will send (*Submit lähettää N kirjausta* = "Submit sends N entries"),
+  and the list shows them all.
+- Snapshots are kept in `localStorage` (`pj-unsub-snapshots`, the 30 most recent
+  weeks).
 
 ### agileday-my-hours
 
