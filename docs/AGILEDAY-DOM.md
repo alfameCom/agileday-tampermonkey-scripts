@@ -19,10 +19,10 @@ before a larger change to the time card or My hours is always welcome, but not e
 
 | Dependency | Used by |
 |---|---|
-| `data-testid` values `project-row`, `task-row` on time card rows | accordion, drag-clone, plain-task-names, merge-task-rows, lock-unplanned, demo-mode |
+| `data-testid` values `project-row`, `task-row` on time card rows | accordion, drag-clone, plain-task-names, merge-task-rows, lock-unplanned, demo-mode, billable-colors |
 | Chip text `Unplanned` (any case) in a project row's first cell; button text `Add task` | lock-unplanned |
 | `data-testid` prefix `input-` on hour inputs | accordion, drag-clone, plain-task-names, merge-task-rows |
-| Task picker `[data-testid^="task-autocomplete-"]` on task rows, its `input` value being the task name | plain-task-names, merge-task-rows |
+| Task picker `[data-testid^="task-autocomplete-"]` on task rows, its `input` value being the task name | plain-task-names, merge-task-rows, billable-colors |
 | `data-testid` `total-YYYY-MM-DD` on summary row cells | sticky-totals, day-colors, accordion |
 | Summary cell structure: one wrapper element whose first two children are *Reported* and *Flex*, as `h:mm` or `-` | day-colors |
 | Day columns aligned by `cellIndex` across all rows of the time card table, header row included | day-colors |
@@ -32,11 +32,12 @@ before a larger change to the time card or My hours is always welcome, but not e
 | My hours MUI DataGrid: `role`, `aria-expanded`, `aria-level`, `data-id`, `data-field`; field names `__tree_data_group__`, `date`, `project`, `task`, `description`; a header title starting with *Actual* | my-hours, demo-mode |
 | Time card: the hour cell component's props `hour` (`id`, `minutes`, `status`, `description`), `timeCardRowId` and `updateHours`, reached through React fiber props | unsubmitted |
 | Week status chip outside the table (`Unsubmitted`, `Submitted`, `Approved`, …) next to the `Submit` button | unsubmitted, accordion |
+| Time card: an object with a boolean `billable` (or `isBillable`, 0/1 accepted) in the React fiber props of the components between a task row's task picker `input` and its `tr` (up to four components above the `tr`) | billable-colors |
 | My hours: DataGrid `apiRef` and the date range picker's `onChange`/`onAccept`, reached through React fiber props | my-hours |
 
 The React fiber rows are the ones we know are fragile. The My hours one has DOM
 fallbacks, but they are weaker; unsubmitted has none and simply stays off when the props
-are missing. A public, stable way to do the same would help: for example URL parameters
+are missing, and billable-colors falls back to the task name. A public, stable way to do the same would help: for example URL parameters
 for the date range, a persisted column layout, and entry ids and dates as `data-`
 attributes on the hour cells. See [UX gaps](#ux-gaps-the-scripts-fill).
 
@@ -221,6 +222,28 @@ changes. **Changes data** when reverting, always through Agileday's own UI.
   same customer, project and task names) on the same date.
 - Health check: entries with hours have `hour.id` and `hour.minutes` in the props.
 
+### agileday-billable-colors
+
+Marks billable and non-billable task rows on the time card.
+
+- Task rows `tr[data-testid="task-row"]`; the task name is the value of the
+  `[data-testid^="task-autocomplete-"] input`. Rows without a name are skipped.
+- Billable setting: from the task picker's `input`, walks up the React fiber
+  (`__reactFiber$…`) through the task row's `tr` and at most four components above it,
+  and takes the first props object (or a plain object up to two levels inside the props,
+  arrays skipped) with a boolean `billable` or `isBillable`. It stops there because the
+  table's props contain every row.
+- Fallback: a task name matching `non-billable`, `nonbillable` or `non billable`
+  (case-insensitive) is non-billable; a matching name also wins over a billable flag.
+- Sets `data-pj-billable` (`yes` / `no`) and `data-pj-billable-src` (`agileday` /
+  `name`) on the `tr`. The edge and tint are inset `box-shadow`s on the cells, so they do
+  not conflict with day-colors' column backgrounds; the sign is an inline SVG on the
+  first cell's `::after`.
+- `pjBillableDebug()` in the console lists the prop keys (no values) of the first task
+  row's fiber chain.
+- Health check: at least one task row with a selected task has the billable setting in
+  its props.
+
 ### agileday-my-hours
 
 Quick ranges, expand/collapse all, custom grouping with sorting and filters, persistent
@@ -337,6 +360,10 @@ What users were missing:
   what changed since the last submit, and a deleted entry leaves no trace at all. A
   per-week change log (or marking changed entries) and a way to undo changes before
   resubmitting would cover this.
+- **Billable and non-billable tasks look the same** (billable-colors). The time card
+  does not show whether a task is billable, so tasks that differ only by a
+  "- nonbillable" suffix are easy to mix up. Marking non-billable tasks in the task
+  column, or showing the billable status in the task picker, would cover this.
 - **A busy task column** (plain-task-names). Every task row keeps an editable task
   dropdown even after hours have been entered, which makes the table hard to read; once
   a row has hours the task rarely changes.

@@ -29,7 +29,8 @@ misbehaves, disable it in Tampermonkey and Agileday is back to normal.
     [plain-task-names](#agileday-plain-task-names) ·
     [merge-task-rows](#agileday-merge-task-rows) ·
     [lock-unplanned](#agileday-lock-unplanned) ·
-    [unsubmitted](#agileday-unsubmitted)
+    [unsubmitted](#agileday-unsubmitted) ·
+    [billable-colors](#agileday-billable-colors)
   - My hours: [my-hours](#agileday-my-hours)
   - Anywhere: [demo-mode](#agileday-demo-mode)
 - [When something stops working](#when-something-stops-working)
@@ -61,6 +62,7 @@ misbehaves, disable it in Tampermonkey and Agileday is back to normal.
 | `agileday-merge-task-rows` | Shows the rows of the same task as one row; several entries on one day appear as a sum with a count and open in a dialog for editing. | [install](https://raw.githubusercontent.com/alfameCom/agileday-tampermonkey-scripts/main/agileday-merge-task-rows.user.js) |
 | `agileday-lock-unplanned` | Locks projects without an allocation (*UNPLANNED*): no hours can be entered and no tasks added. | [install](https://raw.githubusercontent.com/alfameCom/agileday-tampermonkey-scripts/main/agileday-lock-unplanned.user.js) |
 | `agileday-unsubmitted` | On an *UNSUBMITTED* week, shows what has changed since the last submit (new, changed, deleted entries) and reverts changes; otherwise shows what Submit will send. | [install](https://raw.githubusercontent.com/alfameCom/agileday-tampermonkey-scripts/main/agileday-unsubmitted.user.js) |
+| `agileday-billable-colors` | Marks non-billable tasks (orange edge and tint, a "no €" sign) and billable tasks (teal edge) so they are not mixed up. | [install](https://raw.githubusercontent.com/alfameCom/agileday-tampermonkey-scripts/main/agileday-billable-colors.user.js) |
 | `agileday-my-hours` | *My hours* tab: quick date ranges, expand/collapse all, custom grouping with sorting and filters, persistent column widths, column hiding and ordering. | [install](https://raw.githubusercontent.com/alfameCom/agileday-tampermonkey-scripts/main/agileday-my-hours.user.js) |
 | `agileday-demo-mode` | Replaces names, customers, projects, tasks and descriptions with generic ones for screen recordings (Ctrl+Alt+D). | [install](https://raw.githubusercontent.com/alfameCom/agileday-tampermonkey-scripts/main/agileday-demo-mode.user.js) |
 
@@ -254,6 +256,21 @@ that hides it. Hiding is temporary: reloading the page brings the notice back.
   and the list shows them all.
 - Snapshots are kept in `localStorage` (`pj-unsub-snapshots`, the 30 most recent
   weeks).
+
+### agileday-billable-colors
+
+![A non-billable task row with an orange edge, tint and a no-euro sign, and a billable task row with a teal edge](img/time-card-billable-colors.png)
+
+- Billable and non-billable tasks are easy to mix up on the time card, especially when
+  their names are long and differ only at the end (*Task - nonbillable*).
+- A **non-billable** task row gets an orange left edge, a light orange tint and, at the
+  right end of the name cell, a prohibition sign with a € in the middle.
+- A **billable** task row gets a thin teal left edge only.
+- The information comes from the task's own billable setting in Agileday, read from the
+  page (no network requests). If it cannot be found, a task whose name contains
+  *nonbillable* or *non-billable* is marked non-billable, and the sign gets a dashed
+  outline.
+- Rows without a selected task are left unmarked.
 
 ### agileday-my-hours
 
